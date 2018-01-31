@@ -1,0 +1,13 @@
+Strategies {
+	everyMinute	: "0 * * * * ?"
+	every5Minutes 	: "0 */5 * * * ?"
+   	everyHour   	: "0 0 * * * ?"
+   	everyDay    	: "0 0 0 * * ?"
+	default 	= everyChange
+}
+
+Items {
+	Temperature* : strategy = every5Minutes
+	Power_Consumption_KWh, Power_Meter, srodionov_location : strategy = everyChange
+	restoreState* : strategy = restoreOnStartup
+}

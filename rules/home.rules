@@ -1,0 +1,216 @@
+import java.lang.String
+import java.lang.StringBuffer
+
+/*
+import java.util.Date
+
+import org.openhab.core.library.types.*
+import java.util.Date
+import java.text.SimpleDateFormat
+import java.lang.Math
+import java.lang.Integer
+import java.lang.Long
+import java.lang.Double
+import java.lang.String
+*/
+
+var Number Lum_threshold = 10
+
+rule "System started"
+when
+	System started
+then	
+	sendTelegram("srodionovBot", "OpenHab started")
+	createTimer(now.plusSeconds(60)) [|
+		sendCommand(bootCompleted, ON)
+	]	
+	sendCommand(bootCompleted, OFF)
+end
+
+rule "Power lost"
+when
+	Item Input_status changed
+then	
+	if (Input_status.state == "OB")
+	{
+		sendTelegram("srodionovBot", "Power lost")
+	} 
+	else if (Input_status.state == "OL")
+	{
+		sendTelegram("srodionovBot", "Power restored")
+	}
+end
+
+rule "System disarmed"
+when 
+	Item srodionov_laptop changed from OFF to ON or
+	Item srodionov_cell_wifi changed from OFF to ON or
+	Item srodionov_cell_geo changed from OFF to ON
+then
+	sendCommand(armed, OFF)
+end
+
+rule "System armed"
+when 
+	Item srodionov_cell_geo received update
+then
+	if (srodionov_cell_geo.state == OFF && srodionov_laptop.state == OFF && srodionov_cell_wifi.state == OFF)
+	{
+		sendCommand(armed, ON)
+	}
+end
+
+rule "Lights"
+when 
+	Item Garden_Luminosity changed or
+	Item armed changed or 
+	Time cron "0 0/1 * * * ?"	// every minute
+then
+	if (Garden_Luminosity.state < Lum_threshold)
+	{
+		sendCommand(Corridor_Lamp, ON)
+		Garden_Front_Lights?.members.forEach(Switch|
+			sendCommand(Switch, ON)
+		)
+
+		if (armed.state == OFF)
+		{
+			Garden_Entrance_Lights?.members.forEach(Switch|
+				sendCommand(Switch, ON)
+			)
+			Garden_Back_Lights?.members.forEach(Switch|
+				sendCommand(Switch, ON)
+			)
+		}
+	}
+	else
+	{
+		sendCommand(Corridor_Lamp, OFF)
+		Garden_Lights?.members.forEach(Switch|
+			sendCommand(Switch, OFF)
+		)
+	}
+end
+
+rule "Aircon update"
+when
+	Item aircon_mode received update or
+	Item aircon_temp received update
+then
+	var String bitCommand1
+	var String bitCommand2 
+
+	var tempInt = (aircon_temp.state as DecimalType).intValue
+	var String tempBin = String::format("%8s", Integer.toBinaryString(tempInt-16)).replace(' ', '0')
+	tempBin = new StringBuffer(tempBin).reverse().toString()
+
+	var String tempBin2
+
+	if (aircon_mode.state == 0) { //OFF
+		bitCommand1 = "00000000"
+		tempBin = "10010000"
+		tempBin2 = "00000001"
+	} else if (aircon_mode.state == 1) { //AUTO
+		bitCommand1 = "00010000"
+		tempBin = "10010000"
+		tempBin2 = "00001111"
+	} else if (aircon_mode.state == 3) { //HEAT
+		bitCommand1 = "00110000"
+		tempInt = Math.abs(tempInt - 22)
+		tempBin2 = String::format("%4s", Integer.toBinaryString(tempInt)).replace(' ', '0')
+		tempBin2 = new StringBuffer(tempBin2).reverse().toString()
+		tempBin2 = "0000" + tempBin2
+	} else if (aircon_mode.state == 4) { //COLD
+		bitCommand1 = "10010000"
+		tempInt = Math.abs(tempInt - 25)
+		tempBin2 = String::format("%4s", Integer.toBinaryString(tempInt)).replace(' ', '0')
+		tempBin2 = new StringBuffer(tempBin2).reverse().toString()
+		tempBin2 = "0000" + tempBin2
+	} else if (aircon_mode.state == 6) { //FAN
+		bitCommand1 = "11010000"
+		tempBin2 = "11110000"
+	} else if (aircon_mode.state == 5) { //DRY
+		bitCommand1 = "01011000"
+		tempInt = Math.abs(tempInt - 24)
+		tempBin2 = String::format("%4s", Integer.toBinaryString(tempInt)).replace(' ', '0')
+		tempBin2 = new StringBuffer(tempBin2).reverse().toString()
+		tempBin2 = "0000" + tempBin2
+	} else if (aircon_mode.state == 2) { //ANTIFREEZE
+		bitCommand1 = "00110000"
+		tempBin = "00100000"
+		tempBin2 = "00100111"
+	}
+
+	bitCommand1 = bitCommand1 + tempBin
+	bitCommand1 = bitCommand1 + "00000100"
+	bitCommand1 = bitCommand1 + "00001010"
+
+	bitCommand2 = "00000000"
+	bitCommand2 = bitCommand2 + "00000010"
+	bitCommand2 = bitCommand2 + "00000000"
+	bitCommand2 = bitCommand2 + tempBin2
+
+	var String hexStr1 = Long.toString(Long.parseLong(bitCommand1,2),16)
+	var String hexStr2 = Long.toString(Long.parseLong(bitCommand2,2),16)
+
+//	aircon_mode.persist
+//	logInfo("AirCon","Command1: [{}] Command2: [{}]", hexStr1, hexStr2)
+//	logInfo("AirCon","aircon_mode.state: [{}] ", aircon_mode.previousState(false).state)
+
+	sendCommand(aircon_cmd, hexStr1 + "," + hexStr2)
+end
+
+rule "Power monitor"
+when
+	Item Power_Counter received update
+then
+	var Number KW = (Power_Counter.state as DecimalType)/3200
+	var Number diffSec = (now.millis - Power_Meter.lastUpdate.toDateTime.millis)/1000
+	if (diffSec != 0) {
+		var Number KWh = (60/diffSec)*KW*60
+		postUpdate(Power_Consumption_KWh, KWh)
+		if (KWh.floatValue > 6.00){
+			sendTelegram("srodionovBot", "High load: " + String::format("%.2f", KWh.floatValue) + " KWh")
+		}
+	}
+
+	if (Power_Meter.state == NULL){
+		postUpdate(Power_Meter, 0)
+	}
+	postUpdate(Power_Meter, (Power_Meter.state as DecimalType) + KW)
+end
+
+rule "Entrance motion detected"
+when
+    Item Entrance_MS changed from OFF to ON
+then
+	if (armed.state == ON)
+	{
+		if (Garden_Luminosity.state < Lum_threshold)
+		{
+			createTimer(now.plusSeconds(300)) [|
+				Garden_Entrance_Lights?.members.forEach(Switch|sendCommand(Switch, OFF))
+			]	
+			Garden_Entrance_Lights?.members.forEach(Switch|sendCommand(Switch, ON))
+		}
+    		sendTelegramPhoto("srodionovBot", "http://192.168.3.150:8765/picture/2/current", null)
+	}
+end
+
+rule "Parse srodionov location"
+when 
+	Item srodionov_location_RAW changed
+then
+	val String json = (srodionov_location_RAW.state as StringType).toString
+	val String type = transform("JSONPATH", "$._type", json)
+	if (type == "location") 
+	{
+		val String latLon = transform("JSONPATH", "$.lat", json) + "," + transform("JSONPATH", "$.lon", json)
+		srodionov_location.postUpdate(latLon)
+	}
+end
+
+//	logInfo("log.info", diffSec.toString())
+//	sendTelegram("srodionovBot", "Seconds elapsed: " + diffSec.toString())
+
+

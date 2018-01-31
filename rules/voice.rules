@@ -1,0 +1,103 @@
+//import org.openhab.core.library.types.*
+//import org.openhab.core.persistence.* 
+//import org.openhab.model.script.actions.*
+//import org.openhab.core.types.Command 
+//import org.openhab.core.types.*
+//import org.openhab.core.items.GenericItem 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
+//<purpose>_<floorlevel>_<room>_<detail>
+//<purpose>    = Shutter, Socket, Light, Temperature,...
+//<floorlevel> = GF, FF, SF,...
+//<room>       = Bed, Living, Kitchen,...
+//<detail>     = Door, Window, ...`
+
+rule "VoiceControl" 
+when 
+	Item VoiceCommand received command 
+then 
+	var String command = VoiceCommand.state.toString.toLowerCase
+	logInfo("log.info","VoiceCommand received "+command)
+	var State newState = null
+	if (command.contains("degrees")) {
+		var Pattern p = Pattern::compile(".* ([0-9]+) (degrees).*")
+		var Matcher m = p.matcher(command)
+		if (m.matches()) 
+		{
+			logInfo("log.info","found number is "+m.group(1))
+			newState = new StringType(m.group(1).trim())
+		} 
+		else 
+		{
+			logInfo("log.info","command does not match")
+		}
+	} 
+	else if (command.contains("off")) 
+	{
+		newState = OFF
+	} 
+	else if (command.contains("on")) 
+	{
+		newState = ON
+	} 
+
+	var String itemType=null
+	var String itemSubType=""
+	var String reply=""
+	if (command.contains("light")) 
+	{
+        	itemType = "Light"
+		if (room=="Living") 
+		{
+			if (command.contains("little table")) 
+			{
+				itemSubType = "_LittleTable"
+			} 
+			else if (command.contains("toy closet")) 
+			{
+				itemSubType = "_ToyCloset"
+			} 
+			else if (command.contains("cabinet")) 
+			{
+				itemSubType = "_Cabinet"
+			} 
+			else if (command.contains("kitchen top")) 
+			{
+				itemSubType = "_KitchenTop"
+			}
+		}
+	} 
+	else if (command.contains("temperature")) 
+	{
+		itemType = "Temperature"
+		itemSubType = "_Target"
+		reply = "Ok, Temperature "+roomArticle+" "+room+" set to "+newState
+	} 
+
+	logInfo("log.info", "sending " + newState.toString)
+	if (itemType != null && (roomItemPart != null || command.contains("all")) && newState != null) 
+	{
+        	if (command.contains("all")) 
+		{
+            		if (roomItemPart==null)
+               			roomItemPart=""
+            		val String itemName = itemType+roomItemPart+itemSubType
+            		val State finalState = newState
+            		logInfo("log.info","searching for  *"+itemName+"* items")
+
+            		All?.allMembers.filter(s | s.name.contains(itemName) && s.acceptedDataTypes.contains(finalState.class)).forEach[item|
+                		logInfo("log.info","item  "+item.name.toString+" found")
+                		sendCommand(item.name,finalState.toString)
+            		]
+            		logInfo("log.info", "sending "+newState+" to "+itemType+roomItemPart+itemSubType)    
+        	} 
+		else 
+		{
+                	sendCommand(itemType+roomItemPart+itemSubType,newState.toString)
+                	logInfo("log.info", "sending "+newState+" to "+itemType+roomItemPart+itemSubType) 
+        	}
+        	if (reply != "")
+            		sendCommand(TTS_Message,reply)
+    	}
+end

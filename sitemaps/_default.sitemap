@@ -1,0 +1,38 @@
+sitemap _default label="Main Menu"
+{
+	Frame label="Home"{
+		Group		item=Garden label="Garden"
+		Group		item=FirstFloor label="First Floor"
+		Group		item=SecondFloor label="Second Floor"
+		Group		item=Summary label="Summary"
+
+		Text label="Charts" icon="chart"
+		{
+
+			Image 		url="http://192.168.3.150:8080/chart?groups=Temperature&period=D&h=600&w=800" refresh=3600
+			Image 		url="http://192.168.3.150:8080/chart?items=Power_Consumption_KWh&period=D&h=600&w=800" refresh=3600
+		}
+		Text label="Surveillance" icon="camera"
+		{
+			Webview 	url="http://192.168.3.150:8765" height=25
+		}
+		Text label="Tracks" icon="line"
+		{
+			Webview 	url="http://192.168.3.150:8080/static/map.html" height=15
+
+		}
+	}
+    	Frame label="Air Conditioner" {
+        	Selection	item=aircon_mode mappings=[0='Off', 1='Auto', 2='Antifreeze', 3='Heat', 4='Cold', 5='Dry', 6='Fan']
+		Setpoint	item=aircon_temp minValue=16 maxValue=30 step=1
+		Text		item=aircon_cmd
+	}
+    	Frame label="osmc" {
+        	Switch		item=osmc_mute
+        	Slider		item=osmc_volume
+        	Selection	item=osmc_control mappings=[PLAY='Play', PAUSE='Pause', NEXT='Next', PREVIOUS='Previous', FASTFORWARD='Fastforward', REWIND='Rewind']
+        	Default		item=osmc_control
+		Text		item=osmc_title
+		Selection	item=osmc_input mappings=[Up='Up', Down='Down', Left='Left', Right='Right', Select='Select', Back='Back', Home='Home', ContextMenu='ContextMenu', Info='Info', ShowCodec='ShowCodec', ShowOSD='ShowOSD']
+	}
+}

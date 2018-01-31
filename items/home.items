@@ -1,0 +1,94 @@
+Group 				Garden 			"Garden"			<garden>		[ "home-group" ]
+Group 				FirstFloor 		"First Floor" 			<groundfloor>		[ "home-group" ]
+Group 				SecondFloor		"Second Floor" 			<firstfloor>		[ "home-group" ]
+Group 				Terrace			"Terrace" 			<terrace>		[ "home-group" ]
+Group 				Summary			"Summary" 			<group>			[ "home-group" ]
+
+Group 				Temperature
+Group 				Humidity
+Group 				Luminosity
+Group 				restoreState
+
+/* Summary */
+Switch				bootCompleted		"Boot completed" 		<man_1>			(Summary)					
+
+Number				Power_Counter																	{ mqtt="<[mosquitto:counter/EE05E3:state:default]" }
+Number				Power_Consumption_KWh	"Power consumption [%.2f KW/h]"	<energy> 		(Summary)							
+Number				Power_Meter		"Power meter [%.2f kW]"		<energy> 		(Summary, restoreState)
+Number				Input_voltage		"Input voltage [%.1f V]"	<energy> 		(Summary)							{ networkupstools="ups:input.voltage" }
+String				Input_status		"Status [%s]"			<energy>		(Summary)							{ networkupstools="ups:ups.status" }
+String				VoiceCommand
+
+/* active groups */
+Group:Switch:OR(ON, OFF) 	Garden_Entrance_Lights	"Entrance Lights [(%d)]"	<outdoorlight>		(Garden)				
+Group:Switch:OR(ON, OFF) 	Garden_Back_Lights	"Back Lights [(%d)]" 		<outdoorlight>		(Garden)			
+Group:Switch:OR(ON, OFF) 	Garden_Front_Lights	"Front Lights [(%d)]" 		<outdoorlight>		(Garden)			
+Group:Switch:OR(ON, OFF) 	Garden_Lights		"Garden Lights [(%d)]" 		<outdoorlight>		(Garden)			
+//Group:Switch:OR(ON, OFF) 	Lights			"All Lights [(%d)]" 					(Summary)
+//Group:Switch:OR(ON, OFF) 	Heaters			"All Heaters [(%d)]" 					(Summary)
+
+DateTime			Sunrise_Time		"Sunrise: [%1$td.%1$tm.%1$tY %1$tT]"	<sunrise>  	(Summary)							{ channel="astro:sun:home:rise#start" }
+DateTime 			Sunset_Time   		"Sunset: [%1$td.%1$tm.%1$tY %1$tT]"	<sunset>	(Summary)							{ channel="astro:sun:home:set#start" }
+Number   			Elevation     		"Elevation"              		<sun>		(Summary)							{ channel="astro:sun:home:position#elevation" }
+
+Switch				armed			"Armed"					<lock>		(Summary, restoreState)
+
+Switch				srodionov_laptop	"srodionov @ dacha"			<man_1>		(Summary)							{ channel="network:pingdevice:192_168_3_180:online" }
+Switch				srodionov_cell_wifi	"srodionov @ dacha"			<man_1>		(Summary)							{ channel="network:pingdevice:192_168_3_120:online" }
+Switch  			srodionov_cell_geo	"srodionov @ dacha"			<man_1>		(Summary)							{ mqttitude="mosquitto:owntracks/openhab/srodionov" }
+String				srodionov_location_RAW																{ mqtt="<[mosquitto:owntracks/openhab/srodionov:state:default]" }
+String				srodionov_location
+	
+/* Garden */
+Number				Garden_Temperature	"Outside Temp [%.2f °C]"	<temperature>		(Garden, Temperature) 						{ mqtt="<[mosquitto:ws/FCA9D9/temperature:state:default]" }
+Number				Garden_Humidity		"Outside Humidity [%.2f]"	<humidity>		(Garden, Humidity) 						{ mqtt="<[mosquitto:ws/FCA9D9/humidity:state:default]" }
+Number				Garden_Luminosity	"Outside luminosity [%.0f]"	<light>			(Garden, Luminosity, restoreState) 				{ mqtt="<[mosquitto:ws/FCA9D9/luminosity:state:default]" }
+Number 				Forecast_Temperature	"Forecast Temp [%.2f °C]"	<temperature> 		(Garden, Temperature)						{ channel="yahooweather:weather:dedenevo:temperature" }
+
+Switch				Entrance_MS		"Entrance motion sensor" 	<motion>										{ mqtt="<[mosquitto:ms/F0926A:state:MAP(mqtt.map)]" }
+
+Switch				Canopy_light		"Canopy light" 			<outdoorlight>		(Garden_Lights)							{mqtt=">[mosquitto:switch/66B015:command:ON:1],>[mosquitto:switch/66B015:command:OFF:0],<[mosquitto:switch/66B015:state:MAP(mqtt.map)]"}
+Switch				Garden_Lamp0		"Garden lamp 0" 		<outdoorlight>		(Garden_Entrance_Lights, Garden_Lights)				{mqtt=">[mosquitto:switch/96F872:command:ON:1],>[mosquitto:switch/96F872:command:OFF:0],<[mosquitto:switch/96F872:state:MAP(mqtt.map)]"}
+Switch				Garden_Lamp1 		"Garden lamp 1" 		<outdoorlight>		(Garden_Entrance_Lights, Garden_Lights)				{mqtt=">[mosquitto:switch8/DDBC22/0:command:ON:1],>[mosquitto:switch8/DDBC22/0:command:OFF:0],<[mosquitto:switch8/DDBC22/0:state:MAP(mqtt.map)]"}
+Switch				Garden_Lamp2 		"Garden lamp 2" 		<outdoorlight>		(Garden_Entrance_Lights, Garden_Lights)				{mqtt=">[mosquitto:switch8/DDBC22/1:command:ON:1],>[mosquitto:switch8/DDBC22/1:command:OFF:0],<[mosquitto:switch8/DDBC22/1:state:MAP(mqtt.map)]"}
+Switch				Garden_Lamp3 		"Garden lamp 3" 		<outdoorlight>		(Garden_Back_Lights, Garden_Lights)				{mqtt=">[mosquitto:switch8/DDBC22/2:command:ON:1],>[mosquitto:switch8/DDBC22/2:command:OFF:0],<[mosquitto:switch8/DDBC22/2:state:MAP(mqtt.map)]"}
+Switch				Garden_Lamp4 		"Garden lamp 4" 		<outdoorlight>		(Garden_Back_Lights, Garden_Lights)				{mqtt=">[mosquitto:switch8/DDBC22/3:command:ON:1],>[mosquitto:switch8/DDBC22/3:command:OFF:0],<[mosquitto:switch8/DDBC22/3:state:MAP(mqtt.map)]"}
+Switch				Garden_Lamp5 		"Garden lamp 5" 		<outdoorlight>		(Garden_Front_Lights, Garden_Lights)				{mqtt=">[mosquitto:switch8/DDBC22/4:command:ON:1],>[mosquitto:switch8/DDBC22/4:command:OFF:0],<[mosquitto:switch8/DDBC22/4:state:MAP(mqtt.map)]"}
+Switch				Garden_Lamp6 		"Garden lamp 6" 		<outdoorlight>		(Garden_Front_Lights, Garden_Lights)				{mqtt=">[mosquitto:switch8/DDBC22/5:command:ON:1],>[mosquitto:switch8/DDBC22/5:command:OFF:0],<[mosquitto:switch8/DDBC22/5:state:MAP(mqtt.map)]"}
+Switch				Pool_Pump 		"Pool pump" 			<pump>			(Garden)							{mqtt=">[mosquitto:switch8/DDBC22/6:command:ON:1],>[mosquitto:switch8/DDBC22/6:command:OFF:0],<[mosquitto:switch8/DDBC22/6:state:MAP(mqtt.map)]"}
+Switch				Pool_Lamp 		"Pool lamp" 			<light>			(Garden)							{mqtt=">[mosquitto:switch8/DDBC22/7:command:ON:1],>[mosquitto:switch8/DDBC22/7:command:OFF:0],<[mosquitto:switch8/DDBC22/7:state:MAP(mqtt.map)]"}
+
+/* First Floor */
+Number				FirstFloor_Temperature	"First floor Temp [%.2f °C]"	<temperature>		(FirstFloor, Temperature) 					{mqtt="<[mosquitto:ir/F8AFD5/temperature:state:default]"}
+Number				FirstFloor_Humidity	"First floor Humidity [%.2f]"	<humidity>		(FirstFloor, Humidity) 						{mqtt="<[mosquitto:ir/F8AFD5/humidity:state:default]"}
+
+Switch				FirstFloor_Lamp_1	"Floor Lamp Right" 		<light>			(FirstFloor)							{mqtt=">[mosquitto:home/8472778:command:ON:1],>[mosquitto:home/8472778:command:OFF:0],<[mosquitto:home/8472778:state:MAP(mqtt.map)]"}
+Switch				FirstFloor_Lamp_2	"Floor Lamp Left" 		<light>			(FirstFloor)							{mqtt=">[mosquitto:home/8472853:command:ON:1],>[mosquitto:home/8472853:command:OFF:0],<[mosquitto:home/8472853:state:MAP(mqtt.map)]"}
+Switch				Corridor_Lamp		"Corridor lamp" 		<light>			(FirstFloor)							{mqtt=">[mosquitto:switch/984C59:command:ON:1],>[mosquitto:switch/984C59:command:OFF:0],<[mosquitto:switch/984C59:state:MAP(mqtt.map)]"}
+
+/* Second Floor */
+Switch				SecondFloor_Lamp_1	"Floor Lamp" 			<light>			(SecondFloor)							{mqtt=">[mosquitto:home/8474415:command:ON:1],>[mosquitto:home/8474415:command:OFF:0],<[mosquitto:home/8474415:state:MAP(mqtt.map)]"}
+Number				SecondFloor_Temperature	"Second floor Temp [%.2f °C]"	<temperature>		(SecondFloor, Temperature) 					{mqtt="<[mosquitto:ws/F8AFA3/temperature:state:default]"}
+Number				SecondFloor_Humidity	"Second floor Humidity [%.2f]"	<humidity>		(SecondFloor, Humidity) 					{mqtt="<[mosquitto:ws/F8AFA3/humidity:state:default]"}
+
+/* Terrace */
+Number				Terrace_Temperature	"Terrace Temp [%.2f °C]"	<temperature>		(FirstFloor, Temperature) 					{mqtt="<[mosquitto:ws/FCA83F/temperature:state:default]"}
+Number				Terrace_Humidity	"Terrace Humidity [%.2f]"	<humidity>		(FirstFloor, Humidity) 						{mqtt="<[mosquitto:ws/FCA83F/humidity:state:default]"}
+Switch				Terrace_Lamp		"Terrace lamp" 			<light>			(FirstFloor)							{mqtt=">[mosquitto:switch/95C50A:command:ON:1],>[mosquitto:switch/95C50A:command:OFF:0],<[mosquitto:switch/95C50A:state:MAP(mqtt.map)]"}
+
+Switch 				osmc_mute          	"Mute"								                 					{ channel="kodi:kodi:tv:mute" }
+Dimmer 				osmc_volume        	"Volume [%d]"						           							{ channel="kodi:kodi:tv:volume" }
+Player				osmc_control       	"Control"              					 								{ channel="kodi:kodi:tv:control" }
+String 				osmc_title         	"Title [%s]"            												{ channel="kodi:kodi:tv:title" }
+String				osmc_input		"Input"                 												{ channel="kodi:kodi:tv:input" }
+
+Number				aircon_mode		"Mode"				<fan>			(restoreState)
+Number				aircon_temp		"Temperature [%.0f °C]"	<temperature>		(Temperature, restoreState)
+String				aircon_cmd																	{mqtt=">[mosquitto:ir/F8AFD5:command:*:default]"}
+
+
+
+
+
+
+
