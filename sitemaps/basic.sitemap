@@ -1,41 +1,16 @@
 sitemap _default label="Main Menu"
 {
-	Frame label="Status" {
-		Default 	item=inTemperature
-		Default		item=exTemperature
-		Default 	item=Power_Consumption_KWh
-		Default		item=Input_voltage
-		Default		item=armed
-	}
-	Frame label="Garden" {
-		Switch 		item=Garden_Entrance_Lights
-		Switch 		item=Garden_Front_Lights
- 		Switch 		item=Garden_Back_Lights
-		Default		item=Canopy_light
-		Default		item=Pool_Pump
-		Default		item=Pool_Lamp
-		Default		item=Garden_Luminosity
-		Default		item=Garden_Humidity
-	}
-	Frame label="First floor" {
-		Default		item=Terrace_Temperature
-		Default		item=FirstFloor_Temperature
-		Default		item=Corridor_Lamp
-		Default		item=Terrace_Lamp
-		Default		item=FirstFloor_Lamp_1
-		Default		item=FirstFloor_Lamp_2
-	}
-	Frame label="Second Floor" {
-		Default		item=SecondFloor_Temperature
-		Default		item=SecondFloor_Lamp_1
-	}
-	Frame label="Summary" {
-		Default		item=Power_Meter
+	Frame label="Home" {
+		Group		item=Garden label="Garden"
+		Group		item=FirstFloor label="First Floor"
+		Group		item=SecondFloor label="Second Floor"
+		Group		item=Summary label="Summary"
+
 		Text label="Charts" icon="chart"
 		{
 
+			Image 		url="http://192.168.3.150:8080/chart?groups=Temperature&period=D&h=600&w=800" refresh=3600
 			Image 		url="http://192.168.3.150:8080/chart?items=Power_Consumption_KWh&period=D&h=600&w=800" refresh=3600
-			Image 		url="http://192.168.3.150:8080/chart?groups=exTemperature&period=D&h=600&w=800" refresh=3600
 		}
 		Text label="Surveillance" icon="camera"
 		{
@@ -53,9 +28,9 @@ sitemap _default label="Main Menu"
         	Selection	item=AC_fan mappings=[0='Auto', 1='Low', 2='Medium', 3='High']
         	Selection	item=AC_v_flow mappings=[0='Off', 1='Full', 2='Up', 3='Mid-Up', 4='Mid', 5='Mid-Down', 6='Down', 7='Down Mid', 8='Mid-Down Mid-Up', 9='Up Mid']
         	Selection	item=AC_h_flow mappings=[0='Off', 1='Full', 2='Left', 3='Center-Left', 4='Center', 5='Center-Right', 6='Right', 7='Left+Right', 8='Left Right']
+		Text		item=AC_cmd
 	}
-    	Frame label="TV" {
-		Default		item=TV_state
+    	Frame label="osmc" {
         	Switch		item=osmc_mute
         	Slider		item=osmc_volume
         	Selection	item=osmc_control mappings=[PLAY='Play', PAUSE='Pause', NEXT='Next', PREVIOUS='Previous', FASTFORWARD='Fastforward', REWIND='Rewind']

@@ -39,6 +39,9 @@
         	$( "#period" ).change(function() {
           		drawLine();
         	});
+        	$( "#userid" ).change(function() {
+          		drawLine();
+        	});
         	drawLine();
 	  	}
 
@@ -51,49 +54,78 @@
   		function drawLine(){
         	if (wayPath != undefined) wayPath.setMap(null);
       		var starttime = new Date();
-    		starttime.setDate(starttime.getDate()-$( "#period option:selected" ).val());
-    		var userId = "srodionov";
+      		var days = $( "#period option:selected" ).val();
+    		starttime.setDate(starttime.getDate()-days);
+    		var userId = $( "#userid option:selected" ).val();
+  			var aLatLng;
+			var uDatetime;
+  			var gLatLng;
+
+  			if (userId == "") return;
        		var uri = "../rest/persistence/items/" + userId + "_location?starttime=" + encodeURI(starttime.toISOString());
 
-        $.ajax({
-          url     : uri,
-          data    : {},
-      		dataType: 'json',
-      		success : function( jsonResult ) {
-	            var wayPoints = [];
-	            setMapOnAll(null);
-	            markers = [];
-	          	$.each( jsonResult.data, function( i, item ) {
-	      			var aLatLng = item.state.split(",");
-	      			var uDatetime = new Date(item.time);
-	      			var gLatLng = new google.maps.LatLng(aLatLng[0], aLatLng[1]);
-		      		wayPoints.push(gLatLng);
+	        $.ajax({
+	          url     : uri,
+	          data    : {},
+	      		dataType: 'json',
+	      		success : function( jsonResult ) {
+		            var wayPoints = [];
+		            setMapOnAll(null);
+		            markers = [];
+
+		          	$.each( jsonResult.data, function( i, item ) {
+		      			uDatetime = new Date(item.time);
+		      			aLatLng = item.state.split(",");
+		      			gLatLng = new google.maps.LatLng(aLatLng[0], aLatLng[1]);
+			      		wayPoints.push(gLatLng);
+		          	});
 
 			        var marker = new google.maps.Marker({
   						position: gLatLng,
           				map: map,
-          				title: userId + ": " + uDatetime.toLocaleString() 
+          				title: userId
         			});
+        			var contentString = '<div id="content">'+
+	        			'<div id="siteNotice">'+
+	        			'</div>'+
+	        			'<h1 id="firstHeading" class="firstHeading">' + userId + '</h1>'+
+	        			'<div id="bodyContent">'+
+	        			'<p>' + uDatetime.toLocaleString() + ' ' + aLatLng[0] + ', ' + aLatLng[1] + '</p>' +
+	        			'</div>'+
+	        			'</div>';
+			        marker.addListener('click', function() {
+			        	var infowindow = new google.maps.InfoWindow({
+			          		content: contentString
+			        	});
+	          			infowindow.open(map, marker);
+			        });
         			markers.push(marker);
-	          	});
 
-			    map.setCenter(wayPoints[wayPoints.length-1]);
-	    		wayPath = new google.maps.Polyline({
-		      		path: wayPoints,
-		      		geodesic: true,
-		      		strokeColor: '#0000FF',
-		      		strokeOpacity: 1.0,
-		      		strokeWeight: 2
-	            });
-	            wayPath.setMap(map);
-        	}
-        }) 
-      }
+		    		wayPath = new google.maps.Polyline({
+			      		path: wayPoints,
+			      		geodesic: true,
+			      		strokeColor: '#0000FF',
+			      		strokeOpacity: 1.0,
+			      		strokeWeight: 2
+		            });
+		            wayPath.setMap(map);
+
+				    map.setCenter(gLatLng);
+	        	}
+	        }) 
+		}
     </script>
   </head>
 
   <body>
   	<div id="filter">
+		<select id="userid">
+			<option value=""></option>
+  			<option value="arodionov">Alexey Rodionov</option>
+  			<option value="srodionov">Sergey Rodionov</option>
+	  		<option value="vrodionov">Viacheslav Rodionov</option>
+	  		<option value="trodionova">Tatiana Rodionova</option>
+		</select> 
 		<select id="period">
   			<option value="1">day</option>
 	  		<option value="7">week</option>
