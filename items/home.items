@@ -25,8 +25,8 @@ Group:Switch:OR(ON, OFF) 	Garden_Front_Lights	"Front Lights [(%d)]" 		<outdoorli
 Group:Switch:OR(ON, OFF) 	Garden_Lights		"Garden Lights [(%d)]" 		<outdoorlight>		(Garden)			
 //Group:Switch:OR(ON, OFF) 	Lights			"All Lights [(%d)]" 					(Summary)
 Group:Switch:OR(ON, OFF) 	Heaters			"All Heaters [(%d)]" 					(Summary)
-Group:Number:AVG		inTemperature		"Indoor Temperature [%.1f °C]" <temperature>		(Summary)
-Group:Number:AVG		exTemperature		"Outdoor Temperature [%.1f °C]"<temperature>		(Summary)
+Group:Number:AVG		inTemperature		"Indoor temperature [%.1f °C]" <temperature>		(Summary)
+Group:Number:AVG		exTemperature		"Outdoor temperature [%.1f °C]"<temperature>		(Summary)
 
 DateTime			Sunrise_Time		"Sunrise: [%1$td.%1$tm.%1$tY %1$tT]"	<sunrise>  	(Summary)							{ channel="astro:sun:home:rise#start" }
 DateTime 			Sunset_Time   		"Sunset: [%1$td.%1$tm.%1$tY %1$tT]"	<sunset>	(Summary)							{ channel="astro:sun:home:set#start" }
@@ -46,10 +46,10 @@ String				arodionov_location_RAW																{ mqtt="<[mosquitto:owntracks/op
 String				arodionov_location
 	
 /* Garden */
-Number				Garden_Temperature	"Outdoor Temp [%.1f °C]"	<temperature>		(Garden, exTemperature) 					{ mqtt="<[mosquitto:EE8915/temperature:state:default]" }
-Number				Garden_Humidity		"Outdoor Humidity [%.0f]"	<humidity>		(Garden, Humidity) 						{ mqtt="<[mosquitto:EE8915/humidity:state:default]" }
-Number				Garden_Luminosity	"Outdoor luminosity [%.0f]"	<light>			(Garden, Luminosity, restoreState) 				{ mqtt="<[mosquitto:EE8915/luminosity:state:default]" }
-Number 				Forecast_Temperature	"Forecast Temp [%.2f °C]"	<temperature> 		(Garden, exTemperature)						{ channel="yahooweather:weather:dedenevo:temperature" }
+Number				Garden_Temperature	"Outdoor temp [%.1f °C]"	<temperature>		(Garden, exTemperature) 					{ mqtt="<[mosquitto:EE8915/temperature:state:default]" }
+Number				Garden_Humidity		"Outdoor humidity [%.0f]"	<humidity>		(Garden, Humidity) 						{ mqtt="<[mosquitto:EE8915/humidity:state:default]" }
+Number				Garden_Luminosity	"Outdoor luminosity [%.0f]"	<light>			(Garden, Luminosity) 				{ mqtt="<[mosquitto:EE8915/luminosity:state:default]" }
+Number 				Forecast_Temperature	"Forecast temp [%.2f °C]"	<temperature> 		(Garden, exTemperature)						{ channel="yahooweather:weather:dedenevo:temperature" }
 
 Switch				EntranceGarden_MS	"Entrance MS garden" 		<motion>										{ mqtt="<[mosquitto:EE8915/motion:state:MAP(mqtt.map)]" }
 Switch				EntranceStreet_MS	"Entrance MS street" 		<motion>										{ mqtt="<[mosquitto:ms/F0926A:state:MAP(mqtt.map)]" }
@@ -66,15 +66,15 @@ Switch				Pool_Pump 		"Pool pump" 			<pump>			(Garden)							{mqtt=">[mosquitto:
 Switch				Pool_Lamp 		"Pool lamp" 			<light>			(Garden)							{mqtt=">[mosquitto:switch8/DDBC22/7:command:ON:1],>[mosquitto:switch8/DDBC22/7:command:OFF:0],<[mosquitto:switch8/DDBC22/7:state:MAP(mqtt.map)]"}
 
 /* First Floor */
-Number				FirstFloor_Temperature	"First floor Temp [%.1f °C]"	<temperature>		(FirstFloor, inTemperature) 					{mqtt="<[mosquitto:ir/F8AFD5/temperature:state:default]"}
-Number				FirstFloor_Humidity	"First floor Humidity [%.0f]"	<humidity>		(FirstFloor, Humidity) 						{mqtt="<[mosquitto:ir/F8AFD5/humidity:state:default]"}
+Number				FirstFloor_Temperature	"First floor temp [%.1f °C]"	<temperature>		(FirstFloor, inTemperature) 					{mqtt="<[mosquitto:ir/F8AFD5/temperature:state:default]"}
+Number				FirstFloor_Humidity	"First floor humidity [%.0f]"	<humidity>		(FirstFloor, Humidity) 						{mqtt="<[mosquitto:ir/F8AFD5/humidity:state:default]"}
 
 Switch				FirstFloor_Lamp_1	"Floor Lamp Right" 		<light>			(FirstFloor)							{mqtt=">[mosquitto:home/8472778:command:ON:1],>[mosquitto:home/8472778:command:OFF:0],<[mosquitto:home/8472778:state:MAP(mqtt.map)]"}
 Switch				FirstFloor_Lamp_2	"Floor Lamp Left" 		<light>			(FirstFloor)							{mqtt=">[mosquitto:home/8472853:command:ON:1],>[mosquitto:home/8472853:command:OFF:0],<[mosquitto:home/8472853:state:MAP(mqtt.map)]"}
 
 /* Terrace */
-Number				Terrace_Temperature	"Terrace Temp [%.1f °C]"	<temperature>		(FirstFloor, inTemperature) 					{mqtt="<[mosquitto:ws/FCA83F/temperature:state:default]"}
-Number				Terrace_Humidity	"Terrace Humidity [%.0f]"	<humidity>		(FirstFloor, Humidity) 						{mqtt="<[mosquitto:ws/FCA83F/humidity:state:default]"}
+Number				Terrace_Temperature	"Terrace temp [%.1f °C]"	<temperature>		(FirstFloor, inTemperature) 					{mqtt="<[mosquitto:ws/FCA83F/temperature:state:default]"}
+Number				Terrace_Humidity	"Terrace humidity [%.0f]"	<humidity>		(FirstFloor, Humidity) 						{mqtt="<[mosquitto:ws/FCA83F/humidity:state:default]"}
 Switch				Terrace_Lamp		"Terrace lamp" 			<light>			(FirstFloor)							{mqtt=">[mosquitto:switch/95C50A:command:ON:1],>[mosquitto:switch/95C50A:command:OFF:0],<[mosquitto:switch/95C50A:state:MAP(mqtt.map)]"}
 
 /* Corridor */
@@ -83,10 +83,10 @@ Switch				Corridor_Heater		"Corridor heater" 		<heating>		(FirstFloor, Heaters)	
 
 /* Second Floor */
 Switch				SecondFloor_Lamp_1	"Floor Lamp" 			<light>			(SecondFloor)							{mqtt=">[mosquitto:home/8474415:command:ON:1],>[mosquitto:home/8474415:command:OFF:0],<[mosquitto:home/8474415:state:MAP(mqtt.map)]"}
-Number				SecondFloor_Temperature	"Second floor Temp [%.1f °C]"	<temperature>		(SecondFloor, inTemperature) 					{mqtt="<[mosquitto:ws/F8AFA3/temperature:state:default]"}
-Number				SecondFloor_Humidity	"Second floor Humidity [%.0f]"	<humidity>		(SecondFloor, Humidity) 					{mqtt="<[mosquitto:ws/F8AFA3/humidity:state:default]"}
+Number				SecondFloor_Temperature	"Second floor temp [%.1f °C]"	<temperature>		(SecondFloor, inTemperature) 					{mqtt="<[mosquitto:ws/F8AFA3/temperature:state:default]"}
+Number				SecondFloor_Humidity	"Second floor humidity [%.0f]"	<humidity>		(SecondFloor, Humidity) 					{mqtt="<[mosquitto:ws/F8AFA3/humidity:state:default]"}
 
-String				TV_state		"TV"															{ channel="kodi:kodi:tv:status" }
+Switch 				TV_state		"TV"															
 Switch 				osmc_mute          	"Mute"								                 					{ channel="kodi:kodi:tv:mute" }
 Dimmer 				osmc_volume        	"Volume [%d]"						           							{ channel="kodi:kodi:tv:volume" }
 Player				osmc_control       	"Control"              					 								{ channel="kodi:kodi:tv:control" }

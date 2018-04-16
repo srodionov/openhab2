@@ -95,11 +95,7 @@ then
 			if (Switch.state == OFF) sendCommand(Switch, ON)
 		)
 
-		if (armed.state == OFF)
-		{
-			Garden_Entrance_Lights?.members.forEach(Switch|
-				if (Switch.state == OFF) sendCommand(Switch, ON)
-			)
+		if (armed.state == OFF){
 			Garden_Back_Lights?.members.forEach(Switch|
 				if (Switch.state == OFF) sendCommand(Switch, ON)
 			)
@@ -107,7 +103,10 @@ then
 	}
 	else
 	{
-		Garden_Lights?.members.forEach(Switch|
+		Garden_Front_Lights?.members.forEach(Switch|
+			if (Switch.state == ON) sendCommand(Switch, OFF)
+		)
+		Garden_Back_Lights?.members.forEach(Switch|
 			if (Switch.state == ON) sendCommand(Switch, OFF)
 		)
 	}
@@ -238,7 +237,7 @@ then
 	tempBin = tempBin + "0"
 
 	// indicate temperature
-	tempBin = tempBin + "10"
+	tempBin = tempBin + "11"
 
 	checkSum = checkSum + Integer.parseInt(tempBin.substring(0, 4), 2)
 	bitCommand2 = bitCommand2 + new StringBuffer(tempBin).reverse().toString()
@@ -304,7 +303,7 @@ end
 
 rule "Entrance motion detected"
 when
-	Item EntranceSteet_MS changed from OFF to ON or
+	Item EntranceStreet_MS changed from OFF to ON or
 	Item EntranceGarden_MS changed from OFF to ON
 then
 	if (Garden_Luminosity.state < Lum_threshold) {
@@ -319,12 +318,12 @@ then
 		]
 	}
 
-	if (EntranceLight_timer != null) {            
+	if (EntranceLight_timer !== null) {            
 		EntranceLight_timer.reschedule(now.plusMinutes(LightDelayMin))
 	}
 
 	if (armed.state == ON){
-		if (EntranceSteet_MS.state == ON)
+		if (EntranceStreet_MS.state == ON)
     			sendTelegramPhoto("srodionovBot", "http://192.168.3.150:8765/picture/2/current", null)
 		if (EntranceGarden_MS.state == ON)
     			sendTelegramPhoto("srodionovBot", "http://192.168.3.150:8765/picture/1/current", null)
@@ -355,6 +354,23 @@ then
 		val String latLon = transform("JSONPATH", "$.lat", json) + "," + transform("JSONPATH", "$.lon", json)
 		arodionov_location.postUpdate(latLon)
 	}
+end
+
+rule "TV ON"
+when 
+	Thing "kodi:kodi:tv" received update ONLINE
+then
+	postUpdate(TV_state, ON)
+end
+
+rule "TV OFF"
+when 
+	Thing "kodi:kodi:tv" received update OFFLINE or
+	Thing "kodi:kodi:tv" received update UNKNOWN or
+	Thing "kodi:kodi:tv" received update UNINITIALIZED or
+	Thing "kodi:kodi:tv" received update INITIALIZING
+then
+	postUpdate(TV_state, OFF)
 end
 
 //	logInfo("log.info", diffSec.toString())
