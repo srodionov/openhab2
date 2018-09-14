@@ -23,7 +23,8 @@ rule "System started"
 when
 	System started
 then	
-	sendTelegram("srodionovBot", "OpenHab started")
+	//sendTelegram("srodionovBot", "OpenHab started")
+	sendMail("rodionov.sergey.v@gmail.com", "OpenHab started", "")
 	createTimer(now.plusSeconds(60)) [|
 		sendCommand(bootCompleted, ON)
 	]	
@@ -40,12 +41,14 @@ then
 	if (state.startsWith("OB"))
 	{
 		isPowerLost = true
-		sendTelegram("srodionovBot", "Power lost")
+		//sendTelegram("srodionovBot", "Power lost")
+		sendMail("rodionov.sergey.v@gmail.com", "Power lost", "")
 	} 
 	else if (state.startsWith("OL") && isPowerLost == true) 
 	{
 		isPowerLost = false
-		sendTelegram("srodionovBot", "Power restored")
+		//sendTelegram("srodionovBot", "Power restored")
+		sendMail("rodionov.sergey.v@gmail.com", "Power restored", "")
 	}
 end
 
@@ -77,16 +80,16 @@ when
 then
 	if (bootCompleted == OFF) break
 
-	var OnOffType heaterState
-
+/*
+	var OnOffType switchState
 	if (armed.state == OFF) 
-		heaterState = ON
+		switchState = ON
 	else 
-		heaterState = OFF
-
+		switchState = OFF
 	Heaters?.members.forEach(Switch|
-		if (Switch.state != heaterState) sendCommand(Switch, heaterState)
+		if (Switch.state != switchState) sendCommand(Switch, switchState)
 	)
+*/
 
 	if (Elevation.state < 0)
 	//if (Garden_Luminosity.state < Lum_threshold)
@@ -94,21 +97,30 @@ then
 		Garden_Front_Lights?.members.forEach(Switch|
 			if (Switch.state == OFF) sendCommand(Switch, ON)
 		)
-
-		if (armed.state == OFF){
-			Garden_Back_Lights?.members.forEach(Switch|
-				if (Switch.state == OFF) sendCommand(Switch, ON)
-			)
-		}
+//		if (Canopy_light.state == OFF) sendCommand(Canopy_light, ON)
 	}
 	else
 	{
+		Garden_Entrance_Lights?.members.forEach(Switch|
+			if (Switch.state == ON) sendCommand(Switch, OFF)
+		)
 		Garden_Front_Lights?.members.forEach(Switch|
 			if (Switch.state == ON) sendCommand(Switch, OFF)
 		)
 		Garden_Back_Lights?.members.forEach(Switch|
 			if (Switch.state == ON) sendCommand(Switch, OFF)
 		)
+//		if (Canopy_light.state == ON) sendCommand(Canopy_light, OFF)
+
+		//pool pump
+		if (armed.state == ON)
+		{
+			if (exTemperature.state >= 28){
+				if (Pool_Pump.state == OFF) sendCommand(Pool_Pump, ON)
+			}else{
+				if (Pool_Pump.state == ON) sendCommand(Pool_Pump, OFF)
+			}
+		}
 	}
 end
 
@@ -291,7 +303,13 @@ then
 		var Number KWh = (60/diffSec)*KW*60
 		postUpdate(Power_Consumption_KWh, KWh)
 		if (KWh.floatValue > 6.00){
-			sendTelegram("srodionovBot", "High load: " + String::format("%.2f", KWh.floatValue) + " KWh")
+			//sendTelegram("srodionovBot", "High load: " + String::format("%.2f", KWh.floatValue) + " KWh")
+			sendMail("rodionov.sergey.v@gmail.com", "High load: " + String::format("%.2f", KWh.floatValue) + " KWh", "")
+
+			Heaters?.members.forEach(Switch|
+				if (Switch.state != OFF) sendCommand(Switch, OFF)
+			)
+			postUpdate(AC_mode, 0)
 		}
 	}
 
@@ -324,9 +342,11 @@ then
 
 	if (armed.state == ON){
 		if (EntranceStreet_MS.state == ON)
-    			sendTelegramPhoto("srodionovBot", "http://192.168.3.150:8765/picture/2/current", null)
+    			//sendTelegramPhoto("srodionovBot", "http://192.168.3.150:8765/picture/2/current", null)
+			//sendMail("rodionov.sergey.v@gmail.com", "Motion detected", "", "http://192.168.3.150:8765/picture/2/current")
 		if (EntranceGarden_MS.state == ON)
-    			sendTelegramPhoto("srodionovBot", "http://192.168.3.150:8765/picture/1/current", null)
+    			//sendTelegramPhoto("srodionovBot", "http://192.168.3.150:8765/picture/1/current", null)
+			sendMail("rodionov.sergey.v@gmail.com", "Motion detected", "", "http://192.168.3.150:8765/picture/1/current")
 	}
 end
 
@@ -370,6 +390,8 @@ when
 	Thing "kodi:kodi:tv" received update UNINITIALIZED or
 	Thing "kodi:kodi:tv" received update INITIALIZING
 then
+	if (bootCompleted == OFF) break
+
 	postUpdate(TV_state, OFF)
 end
 

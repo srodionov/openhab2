@@ -8,6 +8,6 @@ Strategies {
 
 Items {
 	inTemperature*, exTemperature* : strategy = every5Minutes
-	Power_Consumption_KWh, Power_Meter, srodionov_location, arodionov_location, AC_mode, AC_fan, AC_v_flow, AC_h_flow, Input_voltage : strategy = everyChange
+	Power_Consumption_KWh, Power_Meter, AC_mode, AC_temp, AC_fan, AC_v_flow, AC_h_flow, Input_voltage, armed, srodionov_location : strategy = everyChange
 	restoreState* : strategy = restoreOnStartup
 }

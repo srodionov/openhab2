@@ -18,7 +18,45 @@ when
 	Item VoiceCommand received command 
 then 
 	var String command = VoiceCommand.state.toString.toLowerCase
-	logInfo("log.info","VoiceCommand received "+command)
+	var OnOffType newState 
+
+	if (command.lastIndexOf(" ") == -1) {
+		logInfo("log.info","command unrecognized")
+		break
+	}
+
+	var String itemName = command.substring(0, command.lastIndexOf(" "))
+	var String state = command.substring(command.lastIndexOf(" ")+1)
+
+//	logInfo("log.info","itemName: (" + itemName + ")")
+//	logInfo("log.info","state: (" + state + ")" )
+
+	if (state != "on" && state != "off") {
+		logInfo("log.info","state unrecognized")
+		break
+	}
+
+	if (state.contains("on")) {
+		newState = ON
+	} 
+	else if (command.contains("off")) {
+		newState = OFF
+	}
+	else{
+		logInfo("log.info","state unrecognized")
+		break
+	}
+
+//	All?.allMembers.filter(s | s.label.contains(itemName)).forEach[item|
+	All?.members.filter(s | s.label.toLowerCase().contains(itemName)).forEach[item|
+//                logInfo("log.info","item "+item.name.toString+" found")
+		if (item.state != newState) sendCommand(item, newState)
+	]
+
+//	say("Voice command " + command + " executed")
+	logInfo("log.info","Voice command " + command + " executed")
+
+/*
 	var State newState = null
 	if (command.contains("degrees")) {
 		var Pattern p = Pattern::compile(".* ([0-9]+) (degrees).*")
@@ -100,4 +138,6 @@ then
         	if (reply != "")
             		sendCommand(TTS_Message,reply)
     	}
+
+*/
 end
